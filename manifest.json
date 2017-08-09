@@ -1,0 +1,26 @@
+{
+
+  "manifest_version": 2,
+  "name": "WebCompat to Bugzilla",
+  "version": "1.0",
+
+  "description": "WebExtension helps you copy a webcompat issue to bugzilla bug.",
+  "homepage_url": "https://github.com/MDTsai/webcompat-to-bugzilla",
+
+  "browser_action": {
+    "default-title": "webcompat-to-bugzilla",
+    "default_popup": "popup/popup.html"
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "https://webcompat.com/",
+    "https://bugzilla.mozilla.org/",
+    "webRequest"
+  ]
+}
