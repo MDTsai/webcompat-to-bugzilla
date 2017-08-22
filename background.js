@@ -4,8 +4,44 @@
 
 var bugzilla_newbug_prefix = 'https://bugzilla.mozilla.org/enter_bug.cgi?';
 var bugzilla_existing_prefix = 'https://bugzilla.mozilla.org/show_bug.cgi?id=';
-var webcompat_prefix = 'https://webcompat.com/issues/'
-var github_issue_prefix = 'https://api.github.com/repos/webcompat/web-bugs/issues/'
+var bugzilla_rest_product_ids = 'https://bugzilla.mozilla.org/rest/product_enterable';
+var bugzilla_rest_product_components = 'https://bugzilla.mozilla.org/rest/product?';
+var github_issue_prefix = 'https://api.github.com/repos/webcompat/web-bugs/issues/';
+var webcompat_prefix = 'https://webcompat.com/issues/';
+
+var products = {};
+
+function loadBugzillaProducts() {
+  // Fetch all bug enterable bug IDs from bugzilla restful API
+  fetch(bugzilla_rest_product_ids).then(function(response) {
+    var contentType = response.headers.get("content-type");
+    if(contentType && contentType.includes("application/json")) {
+      return response.json();
+    }
+  }).then(function(json_products) {
+    // Concat all product IDs and query the product/component JSON
+    // Note: It's large and slow
+    var product_components_url = bugzilla_rest_product_components;
+    for (var productId of json_products.ids) {
+      product_components_url += "ids=" + productId + "&";
+    }
+    fetch(product_components_url).then(function(response) {
+      var contentType = response.headers.get("content-type");
+      if(contentType && contentType.includes("application/json")) {
+        return response.json();
+      }
+    }).then(function(mappings) {
+      for (var product of mappings.products) {
+        var components = [];
+        for (var component of product.components) {
+          components.push(component.name);
+        }
+        products[product.name] = components;
+      }
+      console.log("Webcompat-to-Bugzilla: product/component mapping load done");
+    });
+  });
+}
 
 function enableOrDisable(tabId, changeInfo, tab) {
   function isReportableURL(url) {
@@ -77,8 +113,11 @@ function handleMessage(request, sender, sendResponse) {
         });
       });
     });
+  } else if (request.type == "request") {
+    sendResponse({response: JSON.stringify(products)});
   }
 }
 
-chrome.tabs.onUpdated.addListener(enableOrDisable);
 chrome.runtime.onMessage.addListener(handleMessage);
+chrome.runtime.onInstalled.addListener(loadBugzillaProducts);
+chrome.tabs.onUpdated.addListener(enableOrDisable);

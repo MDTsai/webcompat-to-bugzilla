@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var products = {
-    "Core": ["DOM", "General", "Layout", "Networking", "WebVR"],
-    "Firefox": ["General"],
-    "Firefox for Android": ["General", "Keyboards, and IME", "Reader View"]
-};
+var products = null;
 
 document.querySelector("#product").addEventListener("change", (e) => {
     // Clear current components options
@@ -39,4 +35,25 @@ document.querySelector("#submit").addEventListener("click", (e) => {
 
     // Close the popup window
     window.close();
+});
+
+function handleResponse(message) {
+    products = JSON.parse(message.response);
+    var elProducts = document.querySelector("#product");
+    elProducts.innerHTML = "";
+    for (var product in products) {
+        var new_product = document.createElement('option');
+        new_product.value = product;
+        new_product.innerHTML = product;
+        elProducts.appendChild(new_product);
+    }
+    // unselect to make sure we have product/component updated
+    elProducts.selectedIndex = -1;
+}
+
+window.addEventListener("load", (e) => {
+    var sending = browser.runtime.sendMessage({
+        type: "request"
+    });
+    sending.then(handleResponse);
 });
