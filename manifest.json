@@ -21,6 +21,7 @@
     "activeTab",
     "https://webcompat.com/",
     "https://bugzilla.mozilla.org/",
-    "webRequest"
+    "webRequest",
+    "storage"
   ]
 }

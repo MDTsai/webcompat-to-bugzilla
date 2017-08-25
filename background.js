@@ -12,6 +12,11 @@ var webcompat_prefix = 'https://webcompat.com/issues/';
 var products = {};
 
 function loadBugzillaProducts() {
+  // Restore cached products
+  chrome.storage.local.get("products", function(items) {
+    products = items.products;
+  });
+
   // Fetch all bug enterable bug IDs from bugzilla restful API
   fetch(bugzilla_rest_product_ids).then(function(response) {
     var contentType = response.headers.get("content-type");
@@ -31,14 +36,21 @@ function loadBugzillaProducts() {
         return response.json();
       }
     }).then(function(mappings) {
+      var new_products = {};
+
       for (var product of mappings.products) {
         var components = [];
         for (var component of product.components) {
           components.push(component.name);
         }
-        products[product.name] = components;
+        new_products[product.name] = components;
       }
       console.log("Webcompat-to-Bugzilla: product/component mapping load done");
+
+      if (JSON.stringify(products) !== JSON.stringify(new_products)) {
+        products = new_products;
+        chrome.storage.local.set({"products": new_products});
+      }
     });
   });
 }
