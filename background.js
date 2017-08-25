@@ -12,6 +12,12 @@ var webcompat_prefix = 'https://webcompat.com/issues/';
 var products = {};
 
 function loadBugzillaProducts() {
+  // Restore cached products
+  chrome.storage.local.get("products", function(items) {
+    products = items.products;
+  });
+
+  console.log("Webcompat-to-Bugzilla: begin loads product/component mapping");
   // Fetch all bug enterable bug IDs from bugzilla restful API
   fetch(bugzilla_rest_product_ids).then(function(response) {
     var contentType = response.headers.get("content-type");
@@ -31,14 +37,21 @@ function loadBugzillaProducts() {
         return response.json();
       }
     }).then(function(mappings) {
+      var new_products = {};
+
       for (var product of mappings.products) {
         var components = [];
         for (var component of product.components) {
           components.push(component.name);
         }
-        products[product.name] = components;
+        new_products[product.name] = components;
       }
       console.log("Webcompat-to-Bugzilla: product/component mapping load done");
+
+      if (JSON.stringify(products) !== JSON.stringify(new_products)) {
+        products = new_products;
+        chrome.storage.local.set({"products": new_products});
+      }
     });
   });
 }
@@ -56,48 +69,40 @@ function enableOrDisable(tabId, changeInfo, tab) {
   }
 }
 
+function parseIssueToBug(issue_body, bug) {
+  var lines = issue_body.split("\n");
+
+  // Get summary from **Description**: and version from **Browser / Version**:
+  for (var line of lines) {
+    if (line.startsWith("**Description**:")) {
+      bug.summary = line.split("**Description**:")[1];
+    }
+    if (line.startsWith("**Browser")) {
+      bug.version = parseInt(line.replace( /^\D+/g, '')) + " Branch";
+    }
+  }
+
+  bug.description = issue_body.split("**Steps to Reproduce**:")[1].split("_From [webcompat.com]")[0];
+  console.log(bug);
+}
+
 function handleMessage(request, sender, sendResponse) {
   if (request.type == "new") {
     var product = request.product;
     var component = request.component;
-    var version = 'unspecified';
 
-    // Get current tab and get issue body from github API
+    // Get current tab and get issue number from URL
     chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
       var issue_number = tab[0].url.split(webcompat_prefix)[1];
-      var github_issue_api_url = github_issue_prefix + issue_number;
+      var newTabUrl = `${bugzilla_newbug_prefix}product=${encodeURIComponent(product)}&component=${encodeURIComponent(component)}&wcissue=${encodeURIComponent(issue_number)}`;
 
-      var request = new XMLHttpRequest();
-      request.addEventListener('load', function (event) {
-        var issue = JSON.parse(request.response);
-        var lines = issue.body.split("\n");
-        var summary = "";
-
-        // Get summary from **Description**: and version from **Browser / Version**:
-        for (var line of lines) {
-          console.log(line);
-          if (line.startsWith("**Description**:")) {
-            summary = line.split("**Description**:")[1];
-          }
-          if (line.startsWith("**Browser")) {
-            version = parseInt(line.replace( /^\D+/g, '')) + " Branch";
-          }
-        }
-
-        // Get description from **Steps to Reproduce**
-        var description = issue.body.split("**Steps to Reproduce**:")[1].split("_From [webcompat.com]")[0];
-        var newTabUrl = `${bugzilla_newbug_prefix}product=${encodeURIComponent(product)}&component=${encodeURIComponent(component)}&version=${encodeURIComponent(version)}`;
-
-        chrome.tabs.create({ 'url': newTabUrl}, function(tab) {
-          // use executeScript to fill summary and description
-          var code = 'document.querySelector("#short_desc").value=`'+summary+'`;document.querySelector("#comment").value=`'+description+'`;';
-          chrome.tabs.executeScript(tab.id, {
-            code: code
-          });
+      // Create a new tab with product/component/wcissue
+      // Bugzilla will ignore wcissue, content script can use the issue number later
+      chrome.tabs.create({'url': newTabUrl}, function(tab) {
+        chrome.tabs.executeScript(tab.id, {
+            file: "content_scripts/new_bug.js"
         });
       });
-      request.open('GET', github_issue_api_url);
-      request.send();
     });
   } else if (request.type == "seealso") {
     chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
@@ -115,6 +120,9 @@ function handleMessage(request, sender, sendResponse) {
     });
   } else if (request.type == "request") {
     sendResponse({response: JSON.stringify(products)});
+  } else if (request.type == "new_bug") {
+    console.log("receive new_bug from content_script");
+    sendResponse({response: "hello world"});
   }
 }
 
