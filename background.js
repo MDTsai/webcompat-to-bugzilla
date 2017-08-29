@@ -100,29 +100,25 @@ function handleMessage(request, sender, sendResponse) {
       // Bugzilla will ignore wcissue, content script can use the issue number later
       chrome.tabs.create({'url': newTabUrl}, function(tab) {
         chrome.tabs.executeScript(tab.id, {
-            file: "content_scripts/new_bug.js"
+          file: "content_scripts/new_bug.js"
         });
       });
     });
   } else if (request.type == "seealso") {
     chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
-      var currentUrl = tab[0].url;
-      var newTabUrl = `${bugzilla_existing_prefix}${request.bugnumber}`;
+      var issue_number = tab[0].url.split(webcompat_prefix)[1];
+      var newTabUrl = `${bugzilla_existing_prefix}${request.bugnumber}&wcissue=${encodeURIComponent(issue_number)}`;
 
+      // Create a new tab with wcissue
+      // Bugzilla will ignore wcissue, content script can use the issue number
       chrome.tabs.create({ 'url': newTabUrl}, function(tab) {
-        // Fill see also with current issue URL
-        var code='document.querySelector("#see_also").value="'+currentUrl+'";';
-
         chrome.tabs.executeScript(tab.id, {
-          code: code
+          file: "content_scripts/see_also.js"
         });
       });
     });
   } else if (request.type == "request") {
     sendResponse({response: JSON.stringify(products)});
-  } else if (request.type == "new_bug") {
-    console.log("receive new_bug from content_script");
-    sendResponse({response: "hello world"});
   }
 }
 
