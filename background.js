@@ -111,10 +111,24 @@ function handleMessage(request, sender, sendResponse) {
 
       // Create a new tab with wcissue
       // Bugzilla will ignore wcissue, content script can use the issue number
-      chrome.tabs.create({ 'url': newTabUrl}, function(tab) {
-        chrome.tabs.executeScript(tab.id, {
+      chrome.tabs.create({ 'url': newTabUrl, 'active': false }, function(newTab) {
+        chrome.tabs.executeScript(newTab.id, {
           file: "content_scripts/see_also.js"
         });
+      });
+
+      var comment = `Close as duplicate of ${bugzilla_existing_prefix}${request.bugnumber}`;
+      // Open label editor, Click duplidate, Close label editor
+      // Leave message, Close issue
+      var code = `
+                  document.querySelector(".wc-LabelEditorLauncher").click();
+                  document.querySelector("input[name='duplicate']").click();
+                  document.querySelector(".wc-LabelEditor-button").click();
+                  document.querySelector(".wc-Comment-submit").value="${comment}";
+                  document.querySelector(".wc-Button, .wc-Button--action, .js-Issue-state-button").click();
+                  `;
+      chrome.tabs.executeScript(tab[0].id, {
+        code: code
       });
     });
   } else if (request.type == "request") {
