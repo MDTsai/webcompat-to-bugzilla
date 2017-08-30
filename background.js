@@ -100,29 +100,39 @@ function handleMessage(request, sender, sendResponse) {
       // Bugzilla will ignore wcissue, content script can use the issue number later
       chrome.tabs.create({'url': newTabUrl}, function(tab) {
         chrome.tabs.executeScript(tab.id, {
-            file: "content_scripts/new_bug.js"
+          file: "content_scripts/new_bug.js"
         });
       });
     });
   } else if (request.type == "seealso") {
     chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
-      var currentUrl = tab[0].url;
-      var newTabUrl = `${bugzilla_existing_prefix}${request.bugnumber}`;
+      var issue_number = tab[0].url.split(webcompat_prefix)[1];
+      var newTabUrl = `${bugzilla_existing_prefix}${request.bugnumber}&wcissue=${encodeURIComponent(issue_number)}`;
 
-      chrome.tabs.create({ 'url': newTabUrl}, function(tab) {
-        // Fill see also with current issue URL
-        var code='document.querySelector("#see_also").value="'+currentUrl+'";';
-
-        chrome.tabs.executeScript(tab.id, {
-          code: code
+      // Create a new tab with wcissue
+      // Bugzilla will ignore wcissue, content script can use the issue number
+      chrome.tabs.create({ 'url': newTabUrl, 'active': false }, function(newTab) {
+        chrome.tabs.executeScript(newTab.id, {
+          file: "content_scripts/see_also.js"
         });
+      });
+
+      var comment = `Close as duplicate of ${bugzilla_existing_prefix}${request.bugnumber}`;
+      // Open label editor, Click duplidate, Close label editor
+      // Leave message, Close issue
+      var code = `
+                  document.querySelector(".wc-LabelEditorLauncher").click();
+                  document.querySelector("input[name='duplicate']").click();
+                  document.querySelector(".wc-LabelEditor-button").click();
+                  document.querySelector(".wc-Comment-submit").value="${comment}";
+                  document.querySelector(".wc-Button, .wc-Button--action, .js-Issue-state-button").click();
+                  `;
+      chrome.tabs.executeScript(tab[0].id, {
+        code: code
       });
     });
   } else if (request.type == "request") {
     sendResponse({response: JSON.stringify(products)});
-  } else if (request.type == "new_bug") {
-    console.log("receive new_bug from content_script");
-    sendResponse({response: "hello world"});
   }
 }
 
