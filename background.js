@@ -126,6 +126,7 @@ function handleMessage(request, sender, sendResponse) {
                   document.querySelector(".wc-LabelEditor-button").click();
                   document.querySelector(".wc-Comment-submit").value="${comment}";
                   document.querySelector(".wc-Button, .wc-Button--action, .js-Issue-state-button").click();
+                  document.querySelector(".wc-Button, .wc-Button--default, .js-Issue-comment-button").click();
                   `;
       chrome.tabs.executeScript(tab[0].id, {
         code: code
