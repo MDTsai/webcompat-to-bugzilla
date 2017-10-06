@@ -7,22 +7,27 @@
 
 <body>
   <form action="">
-    <input type="radio" id="new" name="action" value="new" checked="checked"> File a bug<br>
-      <div>
-        <label> Product </label>
-        <select id="product">
-        </select> 
-      </div>
-      <div>
-        <label> Component </label>
-        <select id="component">
-        </select> 
-      </div>
-    <input type="radio" name="action" value="seealso"> Add to see also<br>
-      <div>
-        <label> Bug number: </label>
-        <input id="bugnumber" type="number">
-      </div>
+    <input type="radio" id="new" name="action" value="new" checked="checked"> File a new bug<br>
+    <div>
+      <label> Product </label>
+      <select id="product">
+      </select> 
+    </div>
+    <div>
+      <label> Component </label>
+      <select id="component">
+      </select> 
+    </div>
+    <input type="radio" id="commonbug" name="action" value="commonbug"> Add to common bug's see also<br>
+    <div>
+      <select id="commonbugs">
+      </select>
+    </div>  
+    <input type="radio" id="seealso" name="action" value="seealso"> Add to bug's see also<br>
+    <div>
+      <label> Bug number: </label>
+      <input id="bugnumber" type="number">
+    </div>
     <input type="submit" value="Submit" id="submit"></input>
   </form>
   <script src="popup.js"></script>
