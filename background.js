@@ -6,6 +6,7 @@ var bugzilla_newbug_prefix = 'https://bugzilla.mozilla.org/enter_bug.cgi?';
 var bugzilla_existing_prefix = 'https://bugzilla.mozilla.org/show_bug.cgi?id=';
 var bugzilla_rest_product_ids = 'https://bugzilla.mozilla.org/rest/product_enterable';
 var bugzilla_rest_product_components = 'https://bugzilla.mozilla.org/rest/product?';
+var common_bugs_json = 'https://mdtsai.github.io/commonbugs.json';
 var github_issue_prefix = 'https://api.github.com/repos/webcompat/web-bugs/issues/';
 var webcompat_prefix = 'https://webcompat.com/issues/';
 
@@ -96,6 +97,23 @@ var products = {"Air Mozilla":["BigBlueButton","Community","Content","Crestron",
  "www.mozilla.org":["Analytics","Bedrock","General","Information Architecture & UX","L10N","Legacy PHP system","Newsletters","Pages & Content","Product Details","Project Tracking","Release notes","Thunderbird"]
 };
 
+var commonbugs = {"1392147": "Clear Sans and Roboto fonts disparities break layouts",
+ "1391430": "Animated GIFs render incorrectly on Android",
+ "1368555": "Implement -webkit-appearance",
+ "1089326": "Button with a href inside",
+ "1352238": "Native theme for form controls on Firefox Android",
+ "1294490": "WebP Image support",
+ "1357674": "CSS color for placeholder text",
+ "752790":  "Input padding covers text",
+ "218415":  "window.event",
+ "866102":  "-webkit-line-clamp",
+ "390936":  "CSS zoom",
+ "1123938": "Virtual viewport",
+ "823483":  "Max-width",
+ "941351":  "m3u8video",
+ "617034":  "Meta viewport fixed size"
+};
+
 function loadBugzillaProducts() {
   // Restore cached products
   chrome.storage.local.get("products", function(items) {
@@ -140,6 +158,29 @@ function loadBugzillaProducts() {
         chrome.storage.local.set({"products": new_products});
       }
     });
+  });
+}
+
+function loadCommonBugs() {
+  // Restore cached commonbugs
+  chrome.storage.local.get("commonbugs", function(items) {
+    if (typeof items.commonbugs !== "undefined" && items.commonbugs) {
+      commonbugs = items.commonbugs;
+    }
+  });
+  console.log("Webcompat-to-Bugzilla: begin loads common bugs");
+  // Fetch all bug enterable bug IDs from bugzilla restful API
+  fetch(common_bugs_json).then(function(response) {
+    var contentType = response.headers.get("content-type");
+    if(contentType && contentType.includes("application/json")) {
+      return response.json();
+    }
+  }).then(function(json_commonbugs) {
+    console.log("Webcompat-to-Bugzilla: common bugs load done");
+    if (JSON.stringify(commonbugs) !== JSON.stringify(json_commonbugs)) {
+      commonbugs = json_commonbugs;
+      chrome.storage.local.set({"commonbugs": commonbugs});
+    }
   });
 }
 
@@ -219,10 +260,11 @@ function handleMessage(request, sender, sendResponse) {
       });
     });
   } else if (request.type == "request") {
-    sendResponse({response: JSON.stringify(products)});
+    sendResponse({products: JSON.stringify(products), commonbugs: JSON.stringify(commonbugs)});
   }
 }
 
 chrome.runtime.onMessage.addListener(handleMessage);
 chrome.runtime.onInstalled.addListener(loadBugzillaProducts);
+chrome.runtime.onInstalled.addListener(loadCommonBugs);
 chrome.tabs.onUpdated.addListener(enableOrDisable);
