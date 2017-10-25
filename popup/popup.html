@@ -3,32 +3,57 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <style type="text/css">
+    body {
+      font-family: "Helvetica Neue", Helvetica, sans-serif;
+      background-color: #ffc900;
+      color: black;
+      margin: 0;
+      padding:0;}
+    section {
+      margin: 1em;
+      background-color: white;
+      color: black;
+      padding: 1em;
+    }
+    section div {padding-left: 1.5em;}
+    .submit {
+      text-align:right;
+      margin: 0 1.5em 1em 1.5em;}
+
+    </style>
   </head>
 
 <body>
   <form action="">
+    <section class="newbug">
     <input type="radio" id="new" name="action" value="new" checked="checked"> File a new bug<br>
     <div>
       <label> Product </label>
       <select id="product">
-      </select> 
+      </select>
     </div>
     <div>
       <label> Component </label>
       <select id="component">
-      </select> 
+      </select>
     </div>
+    </section>
+    <section class="commonbug">
     <input type="radio" id="commonbug" name="action" value="commonbug"> Add to common bug's see also<br>
     <div>
       <select id="commonbugs">
       </select>
-    </div>  
+    </div>
+    </section>
+    <section class="seealso">
     <input type="radio" id="seealso" name="action" value="seealso"> Add to bug's see also<br>
     <div>
       <label> Bug number: </label>
       <input id="bugnumber" type="number">
     </div>
-    <input type="submit" value="Submit" id="submit"></input>
+    </section>
+    <input class="submit" type="submit" value="Submit" id="submit"></input>
   </form>
   <script src="popup.js"></script>
 </body>
