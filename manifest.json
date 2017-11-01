@@ -23,6 +23,13 @@
     "scripts": ["background.js"]
   },
 
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/webcompat/web-bugs/issues/*"],
+      "js": ["content_scripts/goto_webcompat.js"]
+    }
+  ],
+
   "permissions": [
     "tabs",
     "activeTab",
