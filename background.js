@@ -265,6 +265,10 @@ function handleMessage(request, sender, sendResponse) {
   }
 }
 
+// #28 Reload Bugzilla products and common bugs every hour
+setInterval(loadBugzillaProducts, 60 * 60 * 1000);
+setInterval(loadCommonBugs, 60 * 60 * 1000);
+
 chrome.runtime.onMessage.addListener(handleMessage);
 chrome.runtime.onInstalled.addListener(loadBugzillaProducts);
 chrome.runtime.onInstalled.addListener(loadCommonBugs);
