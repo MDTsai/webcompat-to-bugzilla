@@ -8,7 +8,7 @@ var bugzilla_rest_product_ids = 'https://bugzilla.mozilla.org/rest/product_enter
 var bugzilla_rest_product_components = 'https://bugzilla.mozilla.org/rest/product?';
 var common_bugs_json = 'https://mdtsai.github.io/commonbugs.json';
 var github_issue_prefix = 'https://api.github.com/repos/webcompat/web-bugs/issues/';
-var webcompat_prefix = 'https://webcompat.com/issues/';
+var webcompat_prefixes = ['https://webcompat.com/issues/', 'https://www.webcompat.com/issues/'];
 
 var products = {"Air Mozilla":["BigBlueButton","Community","Content","Crestron","DAM","Events","Extron","Hardware","History","iCal","Krad Radio","Mobile","Other","Rendering","Schedule","Streaming","Venues","Vidyo"],
  "Android Background Services":["Android Sync","Build & Test","Core","Crypto","Firefox Accounts","Firefox Health Report Service","Geolocation","Product Announcements","Reading List Sync"],
@@ -186,8 +186,7 @@ function loadCommonBugs() {
 
 function enableOrDisable(tabId, changeInfo, tab) {
   function isReportableURL(url) {
-    var ret = url.startsWith("https://webcompat.com/issues/");
-    return ret;
+    return webcompat_prefixes.some(prefix => url.startsWith(prefix));
   }
 
   if (changeInfo.status == "loading" && isReportableURL(tab.url)) {
@@ -220,7 +219,8 @@ function handleMessage(request, sender, sendResponse) {
 
     // Get current tab and get issue number from URL
     chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
-      var issue_number = tab[0].url.split(webcompat_prefix)[1];
+      var issue_number = -1;
+      webcompat_prefixes.some(prefix => issue_number = tab[0].url.split(prefix)[1]);
       var newTabUrl = `${bugzilla_newbug_prefix}product=${encodeURIComponent(product)}&component=${encodeURIComponent(component)}&wcissue=${encodeURIComponent(issue_number)}`;
 
       // Create a new tab with product/component/wcissue
@@ -233,7 +233,8 @@ function handleMessage(request, sender, sendResponse) {
     });
   } else if (request.type == "seealso") {
     chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
-      var issue_number = tab[0].url.split(webcompat_prefix)[1];
+      var issue_number = -1;
+      webcompat_prefixes.some(prefix => issue_number = tab[0].url.split(prefix)[1]);
       var newTabUrl = `${bugzilla_existing_prefix}${request.bugnumber}&wcissue=${encodeURIComponent(issue_number)}`;
 
       // Create a new tab with wcissue
