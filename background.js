@@ -247,14 +247,13 @@ function handleMessage(request, sender, sendResponse) {
 
       var comment = `Close as duplicate of ${bugzilla_existing_prefix}${request.bugnumber}`;
       // Open label editor, Click duplidate, Close label editor
-      // Leave message, Close issue
+      // Leave message
       var code = `
-                  document.querySelector(".wc-LabelEditorLauncher").click();
+                  document.querySelector(".js-MilestoneEditorLauncher").click();
                   document.querySelector("input[name='duplicate']").click();
-                  document.querySelector(".wc-LabelEditor-button").click();
+                  document.querySelector(".js-MilestoneEditorLauncher").click();
                   document.querySelector(".wc-Comment-submit").value="${comment}";
-                  document.querySelector(".wc-Button, .wc-Button--action, .js-Issue-state-button").click();
-                  document.querySelector(".wc-Button, .wc-Button--default, .js-Issue-comment-button").click();
+                  document.querySelector(".js-Issue-comment-button").click();
                   `;
       chrome.tabs.executeScript(tab[0].id, {
         code: code
