@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const screenshot_regexp = /(\[\!\[Screenshot Description]\(https:\/\/webcompat\.com\/uploads\/\d+\/\d+\/\w+-\w+-\w+-\w+-\w+-thumb.\w+\)]\()(https:\/\/webcompat\.com\/uploads\/\d+\/\d+\/\w+-\w+-\w+-\w+-\w+.\w+)(\))/;
 var github_issue_prefix = 'https://api.github.com/repos/webcompat/web-bugs/issues/';
 
 var url = new URL(window.location.href);
@@ -66,6 +67,9 @@ fetch(github_issue_api_url).then(function(response) {
 
   // Get description from **Steps to Reproduce**
   var description = issue.body.split("**Steps to Reproduce**:")[1].split("_From [webcompat.com]")[0];
+  if (description.match(screenshot_regexp)) {
+    description = description.replace(screenshot_regexp, "$2");
+  }
   document.querySelector("#comment").value = description;
 
   // By default priority is P3 to push to triage queue
