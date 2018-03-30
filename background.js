@@ -252,7 +252,7 @@ function handleMessage(request, sender, sendResponse) {
                   document.querySelector(".js-MilestoneEditorLauncher").click();
                   document.querySelector("input[name='duplicate']").click();
                   document.querySelector(".js-MilestoneEditorLauncher").click();
-                  document.querySelector(".wc-Comment-submit").value="${comment}";
+                  document.querySelector("#newComment").value="${comment}";
                   document.querySelector(".js-Issue-comment-button").click();
                   `;
       chrome.tabs.executeScript(tab[0].id, {
