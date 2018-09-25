@@ -221,7 +221,7 @@ function handleMessage(request, sender, sendResponse) {
     chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
       var issue_number = -1;
       webcompat_prefixes.some(prefix => issue_number = tab[0].url.split(prefix)[1]);
-      var newTabUrl = `${bugzilla_newbug_prefix}product=${encodeURIComponent(product)}&component=${encodeURIComponent(component)}&wcissue=${encodeURIComponent(issue_number)}`;
+      var newTabUrl = `${bugzilla_newbug_prefix}format=__default__&product=${encodeURIComponent(product)}&component=${encodeURIComponent(component)}&wcissue=${encodeURIComponent(issue_number)}`;
 
       // Create a new tab with product/component/wcissue
       // Bugzilla will ignore wcissue, content script can use the issue number later
