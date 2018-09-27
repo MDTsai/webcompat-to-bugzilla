@@ -25,40 +25,51 @@ fetch(github_issue_api_url).then(function(response) {
   }
 
   /*
-   * Summary from issue.title
-   * URL from lines[0]
-   * Version from lines[2]
-   * OS from lines[4]
-   * Description from lines[6] to end
+   * Get detail from issue.body
+   * summary from **Description**:
+   * version from **Browser / Version**:
+   * OS from **Operating System**:
+   * URL from **URL**:
    */
 
-  document.querySelector("#short_desc").value = issue.title;
-
-  document.querySelector("#bug_file_loc").value = lines[0];
-  
-  var version = parseInt(lines[2].replace( /^\D+/g, '')) + " Branch";
-  document.querySelector("#version").value = version;
-
-  var os = lines[4].substring(2);
-  var osSelect = document.querySelector("#op_sys");
-  if (os.startsWith("Windows 7")) {
-    osSelect.value = "Windows 7";
-  } else if (os.startsWith("Windows 8.1")) {
-    osSelect.value = "Windows 8.1";
-  } else if (os.startsWith("Windows 8")) {
-    osSelect.value = "Windows 8";
-  } else if (os.startsWith("Windows 10")) {
-    osSelect.value = "Windows 10";
-  } else if (os.startsWith("Linux")) {
-    osSelect.value = "Linux";
-  } else if (os.startsWith("Mac OS X")) {
-    osSelect.value = "Mac OS X";
-  } else if (os.match(/Android/i)) {
-    // Consider the report from SoftVision, use match instead
-    osSelect.value = "Android";
+  for (var line of lines) {
+    if (line.startsWith("**Description**:")) {
+      var summary = line.split("**Description**:")[1];
+      document.querySelector("#short_desc").value = summary;
+    }
+    else if (line.startsWith("**Browser")) {
+      var version = parseInt(line.replace( /^\D+/g, '')) + " Branch";
+      document.querySelector("#version").value = version;
+    } else if (line.startsWith("**Operating System**:")) {
+      var os = line.split("**Operating System**: ")[1];
+      var osSelect = document.querySelector("#op_sys");
+      if (os.startsWith("Windows 7")) {
+        osSelect.value = "Windows 7";
+      } else if (os.startsWith("Windows 8.1")) {
+        osSelect.value = "Windows 8.1";
+      } else if (os.startsWith("Windows 8")) {
+        osSelect.value = "Windows 8";
+      } else if (os.startsWith("Windows 10")) {
+        osSelect.value = "Windows 10";
+      } else if (os.startsWith("Linux")) {
+        osSelect.value = "Linux";
+      } else if (os.startsWith("Mac OS X")) {
+        osSelect.value = "Mac OS X";
+        console.log(osSelect.value);
+      } else if (os.match(/Android/i)) {
+        // Consider the report from SoftVision, use match instead
+        osSelect.value = "Android";
+      }
+    } else if (line.startsWith("**URL**:")) {
+      var URL = line.split("**URL**:")[1];
+      document.querySelector("#bug_file_loc").value = URL;
+    }
   }
 
-  var description = lines.slice(6).join('');
+  var description = issue.body.split("**Steps to Reproduce**:")[1].split("_From [webcompat.com]")[0];
+  if (description.match(screenshot_regexp)) {
+    description = description.replace(screenshot_regexp, "$2");
+  }
   document.querySelector("#comment").value = description;
 
   // By default priority is P3 to push to triage queue
