@@ -72,9 +72,8 @@ fetch(github_issue_api_url).then(function(response) {
   }
   document.querySelector("#comment").value = description;
 
-  // By default priority is P3 to push to triage queue
-  document.querySelector("#priority").value = "P3";
-
+  // 2019/07/26 by #37, remove set priority to P3
+  
   // Fill issue URL from webcompat.com
   document.querySelector("#see_also").value = "https://webcompat.com/issues/" + issue_number;
 });

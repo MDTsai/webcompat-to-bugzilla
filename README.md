@@ -4,5 +4,8 @@ This extension is a handy tool for WebCompat.com contributors to cross post a we
 ## How to use?
 Install the extension, while visiting an issue which URL begins with https://webcompat.com/issues/, you can click on the button toolbar, select you want to 1) File a bug or 2) Add to see also with a bug ID or common bugs. Click submit will open a new tab on https://bugzilla.mozilla.org and you can continue your works.
 
+## How to help developer?
+You can checkout the code, install web-ext node module, then use web-ext run to test this extension. Use web-ext build to package this extension and upload to AMO.
+
 ## TODO
 * More handy features
