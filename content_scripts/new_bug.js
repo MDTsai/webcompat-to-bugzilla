@@ -61,7 +61,7 @@ fetch(github_issue_api_url).then(function(response) {
         osSelect.value = "Android";
       }
     } else if (line.startsWith("**URL**:")) {
-      var URL = line.split("**URL**:")[1];
+      var URL = line.split("**URL**:")[1].trim();
       document.querySelector("#bug_file_loc").value = URL;
     }
   }
@@ -73,7 +73,7 @@ fetch(github_issue_api_url).then(function(response) {
   document.querySelector("#comment").value = description;
 
   // 2019/07/26 by #37, remove set priority to P3
-  
+
   // Fill issue URL from webcompat.com
   document.querySelector("#see_also").value = "https://webcompat.com/issues/" + issue_number;
 });
