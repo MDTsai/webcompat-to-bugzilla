@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+  Constants for
+  * Bugzilla new bug URL prefix
+  * Bugzilla show bug URL prefix
+  * Bugzilla RESTful API for query product IDs
+  * Bugzilla RESTful API for query product components
+  * Common bugs JSON (TO BE REMOVED)
+  * WebCompat github issue URL prefix for fetch issue detail
+  * WebCompat issues URL prefix, for detect enable/disable issue
+*/
 var bugzilla_newbug_prefix = 'https://bugzilla.mozilla.org/enter_bug.cgi?';
 var bugzilla_existing_prefix = 'https://bugzilla.mozilla.org/show_bug.cgi?id=';
 var bugzilla_rest_product_ids = 'https://bugzilla.mozilla.org/rest/product_enterable';
@@ -10,6 +20,7 @@ var common_bugs_json = 'https://mdtsai.github.io/commonbugs.json';
 var github_issue_prefix = 'https://api.github.com/repos/webcompat/web-bugs/issues/';
 var webcompat_prefixes = ['https://webcompat.com/issues/', 'https://www.webcompat.com/issues/'];
 
+// Bugzilla product/component mapping JSON
 var products = {"Air Mozilla":["BigBlueButton","Community","Content","Crestron","DAM","Events","Extron","Hardware","History","iCal","Krad Radio","Mobile","Other","Rendering","Schedule","Streaming","Venues","Vidyo"],
  "Android Background Services":["Android Sync","Build & Test","Core","Crypto","Firefox Accounts","Firefox Health Report Service","Geolocation","Product Announcements","Reading List Sync"],
  "Bugzilla":["Administration","Attachments & Requests","Bug Import/Export & Moving","Bugzilla-General","bugzilla.org","Creating/Changing Bugs","Database","Dependency Views","Documentation","Email Notifications","Extension Ideas","Extensions","Incoming Email","Installation & Upgrading","QA Test Scripts","Query/Bug List","Reporting/Charting","Testing Suite","User Accounts","User Interface","WebService","Whining"],
@@ -97,6 +108,7 @@ var products = {"Air Mozilla":["BigBlueButton","Community","Content","Crestron",
  "www.mozilla.org":["Analytics","Bedrock","General","Information Architecture & UX","L10N","Legacy PHP system","Newsletters","Pages & Content","Product Details","Project Tracking","Release notes","Thunderbird"]
 };
 
+// Preload common bugs
 var commonbugs = {"1392147": "Clear Sans and Roboto fonts disparities break layouts",
  "1391430": "Animated GIFs render incorrectly on Android",
  "1368555": "Implement -webkit-appearance",
@@ -212,6 +224,7 @@ function parseIssueToBug(issue_body, bug) {
   bug.description = issue_body.split("**Steps to Reproduce**:")[1].split("_From [webcompat.com]")[0];
 }
 
+// Handle message from tool bar action
 function handleMessage(request, sender, sendResponse) {
   if (request.type == "new") {
     var product = request.product;
@@ -260,6 +273,7 @@ function handleMessage(request, sender, sendResponse) {
       });
     });
   } else if (request.type == "request") {
+    // Helper function to update bugzilla product/componebt mapping and common bugs
     sendResponse({products: JSON.stringify(products), commonbugs: JSON.stringify(commonbugs)});
   }
 }

@@ -7,5 +7,8 @@ Install the extension, while visiting an issue which URL begins with https://web
 ## How to help developer?
 You can checkout the code, install web-ext node module, then use web-ext run to test this extension. Use web-ext build to package this extension and upload to AMO.
 
+### How it works?
+There are 3 major parts: popup.html and popup.js handle the popup windows after clicking on tool bar icon; background.js handles the message from popup.js to follow up actions and some background tasks (enable/disable the icon, load common bugs from cloud); content_scripts adds functions when user go to webcompat related pages.
+
 ## TODO
 * More handy features

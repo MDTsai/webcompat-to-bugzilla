@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * Script for handling click on toolbar popup
+ */
+
 var products = null;
 var commonbugs = null;
 
@@ -43,6 +47,7 @@ document.querySelector("#submit").addEventListener("click", (e) => {
     window.close();
 });
 
+// Use background.js to get updated bugzilla product/component mapping and common bugs in popup.html
 function handleResponse(message) {
     products = JSON.parse(message.products);
     var elProducts = document.querySelector("#product");
