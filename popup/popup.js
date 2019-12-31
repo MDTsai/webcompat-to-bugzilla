@@ -61,14 +61,30 @@ function handleResponse(message) {
     // unselect to make sure we have product/component updated
     elProducts.selectedIndex = -1;
 
+    // TODO: Sort commonbugs by count and get first 10 bugs
     commonbugs = JSON.parse(message.commonbugs);
+    var sortedbugs = [];
+    for (var bug in commonbugs) {
+        sortedbugs.push({
+            "number": bug,
+            "name": commonbugs[bug].name,
+            "count": commonbugs[bug].count
+        });
+    }
+    sortedbugs.sort(function(a, b) {
+      return a.count < b.count ? 1 : -1;
+    });
     var elCommonBugs = document.querySelector("#commonbugs");
     elCommonBugs.innerHTML = "";
+    commonbugs = sortedbugs;
     for (var bug in commonbugs) {
         var new_bug = document.createElement("option");
-        new_bug.value = bug;
-        new_bug.innerHTML = commonbugs[bug];
+        new_bug.value = commonbugs[bug].number;
+        new_bug.innerHTML = "Bug " + commonbugs[bug].number + " - " + commonbugs[bug].name;
         elCommonBugs.appendChild(new_bug);
+        if (bug == 10) {
+            break;
+        }
     }
 }
 

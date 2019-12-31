@@ -16,6 +16,7 @@ var bugzilla_newbug_prefix = 'https://bugzilla.mozilla.org/enter_bug.cgi?';
 var bugzilla_existing_prefix = 'https://bugzilla.mozilla.org/show_bug.cgi?id=';
 var bugzilla_rest_product_ids = 'https://bugzilla.mozilla.org/rest/product_enterable';
 var bugzilla_rest_product_components = 'https://bugzilla.mozilla.org/rest/product?';
+var bugzilla_rest_bug = 'https://bugzilla.mozilla.org/rest/bug/'
 var common_bugs_json = 'https://mdtsai.github.io/commonbugs.json';
 var github_issue_prefix = 'https://api.github.com/repos/webcompat/web-bugs/issues/';
 var webcompat_prefixes = ['https://webcompat.com/issues/', 'https://www.webcompat.com/issues/'];
@@ -109,21 +110,22 @@ var products = {"Air Mozilla":["BigBlueButton","Community","Content","Crestron",
 };
 
 // Preload common bugs
-var commonbugs = {"1392147": "Clear Sans and Roboto fonts disparities break layouts",
- "1391430": "Animated GIFs render incorrectly on Android",
- "1368555": "Implement -webkit-appearance",
- "1089326": "Button with a href inside",
- "1352238": "Native theme for form controls on Firefox Android",
- "1294490": "WebP Image support",
- "1357674": "CSS color for placeholder text",
- "752790":  "Input padding covers text",
- "218415":  "window.event",
- "866102":  "-webkit-line-clamp",
- "390936":  "CSS zoom",
- "1123938": "Virtual viewport",
- "823483":  "Max-width",
- "941351":  "m3u8video",
- "617034":  "Meta viewport fixed size"
+var commonbugs = {
+ "1392147": { name: "Clear Sans and Roboto fonts disparities break layouts", count: 1 },
+ "1391430": { name: "Animated GIFs render incorrectly on Android", count: 2 },
+ "1368555": { name: "Implement -webkit-appearance", count: 3 },
+ "1089326": { name: "Button with a href inside", count: 4 },
+ "1352238": { name: "Native theme for form controls on Firefox Android", count: 5 },
+ "1294490": { name: "WebP Image support", count: 6 },
+ "1357674": { name: "CSS color for placeholder text", count: 7 },
+ "752790":  { name: "Input padding covers text", count: 8 },
+ "218415":  { name: "window.event", count: 9 },
+ "866102":  { name: "-webkit-line-clamp", count: 10 },
+ "390936":  { name: "CSS zoom", count: 11 },
+ "1123938": { name: "Virtual viewport", count: 12 },
+ "823483":  { name: "Max-width", count: 13 },
+ "941351":  { name: "m3u8video", count: 14 },
+ "617034":  { name: "Meta viewport fixed size", count: 15 }
 };
 
 function loadBugzillaProducts() {
@@ -180,20 +182,6 @@ function loadCommonBugs() {
       commonbugs = items.commonbugs;
     }
   });
-  console.log("Webcompat-to-Bugzilla: begin loads common bugs");
-  // Fetch all bug enterable bug IDs from bugzilla restful API
-  fetch(common_bugs_json).then(function(response) {
-    var contentType = response.headers.get("content-type");
-    if(contentType && contentType.includes("application/json")) {
-      return response.json();
-    }
-  }).then(function(json_commonbugs) {
-    console.log("Webcompat-to-Bugzilla: common bugs load done");
-    if (JSON.stringify(commonbugs) !== JSON.stringify(json_commonbugs)) {
-      commonbugs = json_commonbugs;
-      chrome.storage.local.set({"commonbugs": commonbugs});
-    }
-  });
 }
 
 function enableOrDisable(tabId, changeInfo, tab) {
@@ -226,6 +214,7 @@ function parseIssueToBug(issue_body, bug) {
 
 // Handle message from tool bar action
 function handleMessage(request, sender, sendResponse) {
+  // Create a new bug
   if (request.type == "new") {
     var product = request.product;
     var component = request.component;
@@ -245,6 +234,7 @@ function handleMessage(request, sender, sendResponse) {
       });
     });
   } else if (request.type == "seealso") {
+    // Add to bug's see also
     chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
       var issue_number = -1;
       webcompat_prefixes.some(prefix => issue_number = tab[0].url.split(prefix)[1]);
@@ -272,6 +262,26 @@ function handleMessage(request, sender, sendResponse) {
         code: code
       });
     });
+    // Update common bugs's json
+    if (commonbugs.hasOwnProperty(request.bugnumber)) {
+      // If bug existing, increase use count by 1 then save to local storage
+      commonbugs[request.bugnumber].count += 1;
+      chrome.storage.local.set({"commonbugs": commonbugs});
+    } else {
+      // If bug not existing, fetch bugzilla info and create a new common bug then save to local storage
+      fetch(bugzilla_rest_bug+request.bugnumber).then(function(response) {
+        var contentType = response.headers.get("content-type");
+          if(contentType && contentType.includes("application/json")) {
+            return response.json();
+          }
+      }).then(function(json_bug) {
+        commonbugs[request.bugnumber] = {
+            name: json_bug['bugs'][0]['summary'],
+            count: 1
+        }
+        chrome.storage.local.set({"commonbugs": commonbugs});
+      });
+    }
   } else if (request.type == "request") {
     // Helper function to update bugzilla product/componebt mapping and common bugs
     sendResponse({products: JSON.stringify(products), commonbugs: JSON.stringify(commonbugs)});
@@ -280,7 +290,6 @@ function handleMessage(request, sender, sendResponse) {
 
 // #28 Reload Bugzilla products and common bugs every hour
 setInterval(loadBugzillaProducts, 60 * 60 * 1000);
-setInterval(loadCommonBugs, 60 * 60 * 1000);
 
 chrome.runtime.onMessage.addListener(handleMessage);
 chrome.runtime.onInstalled.addListener(loadBugzillaProducts);
